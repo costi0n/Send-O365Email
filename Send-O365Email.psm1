@@ -36,7 +36,7 @@
         nome          = "Firstname"
         cognome       = "Surname"
         nomeutente    = "f.surname" 
-        cellulare     = "3297660848"
+        cellulare     = "3291234848"
     }
 
     $recipient = "recipient@email.com"
