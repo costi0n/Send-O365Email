@@ -1,6 +1,6 @@
 <#
  .Synopsis
-  Send email via Office365 / ExchageOnline
+  Send email via Office365 / ExchageOnline V0.1
 
  .Description
   Send email via Office365 / ExchageOnline Account. 
