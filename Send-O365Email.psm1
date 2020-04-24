@@ -79,16 +79,22 @@ function MaskSring {
     param (
         [string] $var = $null
     )
-    $length = $var.length
 
-    $begin = $var.substring(0, 3)
-    $end = $var.substring($length - 3, 3)
-    $rst = $length - ($begin.Length) - ($end.Length)
-    $m = $null
-    For ($i = 1; $i -le $rst; $i++) {
-        $m = $m + "*"
+    if ($var) {
+        $length = $var.length
+        $begin = $var.substring(0, 3)
+        $end = $var.substring($length - 3, 3)
+        $rst = $length - ($begin.Length) - ($end.Length)
+        $m = $null
+        For ($i = 1; $i -le $rst; $i++) {
+            $m = $m + "*"
+        }
+        Return($begin + $m + $end) 
     }
-    Return($begin + $m + $end) 
+    else {
+        Return $null
+    }
+
 }
 
 # invia il messaggio di posta via Office365 in formato Html
@@ -101,11 +107,12 @@ function Send-O365Email {
         [string] $subject = "Credenziali Account Aziendale",
         [array] $HtmlBody = @(),
         [string] $template = $null,
-        [Object] $datiUtente = @{}
+        [Object] $datiUtente = @{ },
+        [string] $Attachments = $null
     )
  
     $xml = Get-Unique-Id
-    $crdXML = $crdpath + $xml + ".xml"
+    $crdXML = $crdpath + "\" + $xml + ".xml"
 
     if ( Test-Path $crdXML ) {
         $cred = Import-Clixml $crdXML
@@ -139,7 +146,6 @@ function Send-O365Email {
         SmtpServer  = 'smtp.office365.com'
         From        = $sender
         To          = $recipient
-        Bcc         = $bcc
         Subject     = $subject
         BodyAsHtml  = $true
         Body        = ($HtmlBody | Out-String)
@@ -148,6 +154,10 @@ function Send-O365Email {
         Port        = '587'
     }
 
+    # add on to hash table $EmailParams the $bcc if is not null
+    if ( $bcc ) { $EmailParams.Add( "Bcc", $bcc) }
+    # add on to hash table $EmailParams the $Attachments if is not null
+    if ( $Attachments ) { $EmailParams.Add( "Attachments", $Attachments) }
 
     try {
         Send-MailMessage @EmailParams -usessl -Credential $cred -Priority High
