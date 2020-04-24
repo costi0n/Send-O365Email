@@ -70,8 +70,11 @@ function Get-StringHash {
 
 # Genera id unico basato su nome utente e hardware serial number
 function Get-Unique-Id {
+    param (
+        [String] $thissender = $null
+    )
     $hwSerial = (Get-WmiObject win32_bios).SerialNumber
-    $uh = $env:username + $hwSerial
+    $uh = $env:username + $hwSerial + $thissender
     Return Get-StringHash $uh
 }
 # maschera una stringa per privacy
@@ -111,14 +114,19 @@ function Send-O365Email {
         [string] $Attachments = $null
     )
  
-    $xml = Get-Unique-Id
+    
+    $re="[a-z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#\$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+    $mailSender = [regex]::MAtch($sender, $re, "IgnoreCase ")
+
+
+    $xml = Get-Unique-Id $mailSender.Value
     $crdXML = $crdpath + "\" + $xml + ".xml"
 
     if ( Test-Path $crdXML ) {
         $cred = Import-Clixml $crdXML
     }
     else {
-        Get-Credential $sender | Export-Clixml  $crdXML #Store Credentials
+        Get-Credential $mailSender.Value | Export-Clixml  $crdXML #Store Credentials
         if ( Test-Path $crdXML ) {
             $cred = Import-Clixml $crdXML
         }
