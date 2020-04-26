@@ -146,6 +146,7 @@ function Send-O365Email {
             -replace '{cognome}'  , $datiUtente.cognome`
             -replace '{nomeutente}' , $datiUtente.nomeutente`
             -replace '{cellulare}' , $cellulare`
+            -replace '{errata}', $datiUtente.errata`
 
         $HtmlBody += $ContentLine
     }
