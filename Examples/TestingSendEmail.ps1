@@ -33,11 +33,11 @@ function Get-Unique-Id ($recipient) {
 }
 
 
-#Get-Unique-Id("c.ghita@netcare.it")
+
 
 Clear-Host
 
-$emailMitente = "medicinadibasecovid@asl.rieti.it"
+$emailMitente = "email@domail.tld"
 $nomeVisualizzato = $null
 
 $zz = "$($nomeVisualizzato) <$($emailMitente)>"
