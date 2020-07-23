@@ -48,6 +48,7 @@
 #>
 
 
+
 # Genera hash partendo da una stringa
 function Get-StringHash {
     param
@@ -111,7 +112,8 @@ function Send-O365Email {
         [array] $HtmlBody = @(),
         [string] $template = $null,
         [Object] $datiUtente = @{ },
-        [string] $Attachments = $null
+        [string] $Attachments = $null,
+        [string] $Masked = $false
     )
  
     
@@ -139,7 +141,12 @@ function Send-O365Email {
     $HtmlContent = Get-Content -Path $template
 
     foreach ($ContentLine in $HtmlContent) {
-        $cellulare = MaskSring -var $datiUtente.cellulare
+        if ( $Masked ) { 
+                #$cellulare = MaskSring -var $datiUtente.cellulare
+                $cellulare = $datiUtente.cellulare
+            } else {  
+                $cellulare = $datiUtente.cellulare 
+            } 
         # If more variables are added to the message, just copy and modIfy the lines below.
         $ContentLine = $ContentLine `
             -replace '{nome}'     , $datiUtente.nome`
@@ -170,7 +177,7 @@ function Send-O365Email {
 
     try {
         Send-MailMessage @EmailParams -usessl -Credential $cred -Priority High
-        Return "inviato a: " + $recipient
+        Return $recipient
     }
     Catch { 
         return "Si è verificato un errore ! Il messaggio non è stato inviato !"
