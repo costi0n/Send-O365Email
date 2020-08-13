@@ -107,13 +107,15 @@ function Send-O365Email {
         [string] $recipient = $null,
         [string] $sender = $null,
         [string] $crdpath = $null,
+        [string] $cc  = $null,
         [string] $bcc = $null,
         [string] $subject = "Credenziali Account Aziendale",
         [array] $HtmlBody = @(),
         [string] $template = $null,
         [Object] $datiUtente = @{ },
         [string] $Attachments = $null,
-        [string] $Masked = $false
+        [string] $Masked = $false,
+        [string] $verbose = $false
     )
  
     
@@ -172,12 +174,26 @@ function Send-O365Email {
 
     # add on to hash table $EmailParams the $bcc if is not null
     if ( $bcc ) { $EmailParams.Add( "Bcc", $bcc) }
+    #add on cc hash table $EmailParams the $cc if is not null
+    if ( $cc ) { $EmailParams.Add( "Cc", $cc) }
     # add on to hash table $EmailParams the $Attachments if is not null
     if ( $Attachments ) { $EmailParams.Add( "Attachments", $Attachments) }
 
     try {
         Send-MailMessage @EmailParams -usessl -Credential $cred -Priority High
-        Return $recipient
+        if ($verbose -eq $true) {
+            $ret = "To:$($recipient) "
+            if ( $cc ) {
+                $ret += "Cc:$($cc) "
+            }
+            if ( $bcc ) {
+                $ret += "Bcc:$($bcc)"
+            }
+        } else {
+            $ret = $recipient
+        }
+
+        Return $ret
     }
     Catch { 
         return "Si è verificato un errore ! Il messaggio non è stato inviato !"
