@@ -48,9 +48,7 @@
 #>
 
 
-
-
-# Genera hash partendo da una stringa
+# Genera hash partendo da una stringa .
 function Get-StringHash {
     param
     (
