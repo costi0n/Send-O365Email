@@ -3,13 +3,13 @@
   Send email via Office365 / ExchageOnline V0.1
 
  .Description
-  Send email via Office365 / ExchageOnline Account. 
+  Send email via Office365 / ExchageOnline Account.
 
  .Parameter Recipient
-  Mandatory, the recipient email address 
+  Mandatory, the recipient email address
 
- .Parameter Sender
-  Mandatory, the sender email address "SENDER <sender@example.com>"
+ .Parameter EmailSender
+  Mandatory, the sender email address "EMAILSENDER <emailsender@example.com>"
 
  .Parameter crdpath
   Optional, path where will be stored the O365 credentials, if this is empty will be stored on temporary user folder
@@ -25,9 +25,6 @@
   Optional, only if we want to add some extra html, for experts only
 
  .Parameter template
-  Mandatory, full path to the template html file with placeholders
-
-.Parameter template
   Mandatory, this object will contain all user data to be used on html template, see example below
 
 .Example
@@ -35,7 +32,7 @@
     $utente_nuovo = @{
         nome          = "Firstname"
         cognome       = "Surname"
-        nomeutente    = "f.surname" 
+        nomeutente    = "f.surname"
         cellulare     = "3291234848"
     }
 
@@ -43,28 +40,26 @@
     $template = "c:\folder_wehere_is_html\EmailTemplateNew.html"
     $crdpath = "c:\folder_wehre_is_xml\"
 
-    $return = Send-O365Email -recipient $recipient -sender "SENDER <sender@example.com>" -crdpath $crdpath -template $template -datiUtente $utente_nuovo
+    $return = Send-O365Email -recipient $recipient -emailsender "EMAILSENDER <emailsender@example.com>" -crdpath $crdpath -template $template -datiUtente $utente_nuovo
     $return
 #>
-
 
 # Genera hash partendo da una stringa .
 function Get-StringHash {
     param
     (
-        [String] $String,
-        $HashName = "MD5"
+        [String] $String
     )
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($String)
     $algorithm = [System.Security.Cryptography.HashAlgorithm]::Create('MD5')
-    $StringBuilder = New-Object System.Text.StringBuilder 
-  
-    $algorithm.ComputeHash($bytes) | 
-    ForEach-Object { 
-        $null = $StringBuilder.Append($_.ToString("x2")) 
-    } 
-  
-    $StringBuilder.ToString() 
+    $StringBuilder = New-Object System.Text.StringBuilder
+
+    $algorithm.ComputeHash($bytes) |
+    ForEach-Object {
+        $null = $StringBuilder.Append($_.ToString("x2"))
+    }
+
+    $StringBuilder.ToString()
 }
 
 
@@ -73,9 +68,10 @@ function Get-Unique-Id {
     param (
         [String] $thissender = $null
     )
-    $hwSerial = (Get-WmiObject win32_bios).SerialNumber
+    
+    $hwSerial =(Get-CimInstance -Query 'Select * from Win32_bios').SerialNumber
     $uh = $env:username + $hwSerial + $thissender
-    Return Get-StringHash $uh
+    return Get-StringHash $uh
 }
 # maschera una stringa per privacy
 function MaskSring {
@@ -92,10 +88,10 @@ function MaskSring {
         For ($i = 1; $i -le $rst; $i++) {
             $m = $m + "*"
         }
-        Return($begin + $m + $end) 
+        Return($begin + $m + $end)
     }
     else {
-        Return $null
+        return $null
     }
 
 }
@@ -104,7 +100,7 @@ function MaskSring {
 function Send-O365Email {
     param (
         [string] $recipient = $null,
-        [string] $sender = $null,
+        [string] $emailsender = $null,
         [string] $crdpath = $null,
         [string] $cc  = $null,
         [string] $bcc = $null,
@@ -116,10 +112,10 @@ function Send-O365Email {
         [string] $Masked = $false,
         [string] $verbose = $false
     )
- 
-    
+
+
     $re="[a-z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#\$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
-    $mailSender = [regex]::MAtch($sender, $re, "IgnoreCase ")
+    $mailSender = [regex]::MAtch($emailsender, $re, "IgnoreCase ")
 
 
     $xml = Get-Unique-Id $mailSender.Value
@@ -134,20 +130,20 @@ function Send-O365Email {
             $cred = Import-Clixml $crdXML
         }
         else {
-            Return "Qualcosa non va con le tue credenziali !"
-            Exit
+            return "Qualcosa non va con le tue credenziali !"
+            exit
         }
     }
 
     $HtmlContent = Get-Content -Path $template
 
     foreach ($ContentLine in $HtmlContent) {
-        if ( $Masked ) { 
+        if ( $Masked ) {
                 #$cellulare = MaskSring -var $datiUtente.cellulare
                 $cellulare = $datiUtente.cellulare
-            } else {  
-                $cellulare = $datiUtente.cellulare 
-            } 
+            } else {
+                $cellulare = $datiUtente.cellulare
+            }
         # If more variables are added to the message, just copy and modIfy the lines below.
         $ContentLine = $ContentLine `
             -replace '{nome}'     , $datiUtente.nome`
@@ -161,7 +157,7 @@ function Send-O365Email {
 
     $EmailParams = @{
         SmtpServer  = 'smtp.office365.com'
-        From        = $sender
+        From        = $emailsender
         To          = $recipient
         Subject     = $subject
         BodyAsHtml  = $true
@@ -192,11 +188,11 @@ function Send-O365Email {
             $ret = $recipient
         }
 
-        Return $ret
+        return $ret
     }
-    Catch { 
+    catch {
         return "Si è verificato un errore ! Il messaggio non è stato inviato !"
-        Exit 1
+        exit 1
     }
 
 }
